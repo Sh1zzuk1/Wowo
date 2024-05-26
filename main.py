@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 import json
 
-API_TOKEN = 'YOUR_API_TOKEN'
+API_TOKEN = '7384757316:AAGrTA66ZXXYCyGSkhUtO_hzUn0XHpaLDRM'
 bot = telebot.TeleBot(API_TOKEN)
 
 # Пример хранилища для хранения данных пользователей

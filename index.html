@@ -11,47 +11,58 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            font-family: 'Arial', sans-serif;
         }
         .registration-form {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 350px;
             text-align: center;
         }
         .registration-form h2 {
             margin-bottom: 20px;
+            color: #333;
         }
         .registration-form input,
         .registration-form select,
         .registration-form textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
         }
         .registration-form button {
-            padding: 10px 20px;
-            background-color: #007bff;
+            padding: 12px 20px;
+            background-color: #ff69b4;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             color: #fff;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            position: relative;
+            overflow: hidden;
         }
         .registration-form button:hover {
-            background-color: #0056b3;
+            background-color: #ff1493;
         }
         .success-message {
             display: none;
             background-color: #d4edda;
             color: #155724;
-            padding: 10px;
-            border-radius: 4px;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             margin-top: 20px;
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -59,8 +70,18 @@
 
 <div class="registration-form" id="registrationForm">
     <h2>Регистрация</h2>
-    <form>
+    <form id="regForm" onsubmit="register(event)">
         <input type="text" name="name" placeholder="Имя" required>
+        <select name="gender" required>
+            <option value="" disabled selected>Выберите пол</option>
+            <option value="Мужской">Мужской</option>
+            <option value="Женский">Женский</option>
+        </select>
+        <select name="looking_for" required>
+            <option value="" disabled selected>Кого ищете</option>
+            <option value="Мужской">Мужской</option>
+            <option value="Женский">Женский</option>
+        </select>
         <input type="number" name="age" placeholder="Возраст" required>
         <textarea name="about" placeholder="Расскажите о себе" rows="4" required></textarea>
         <select name="country" id="country" onchange="populateCities()" required>
@@ -74,7 +95,7 @@
             <option value="" disabled selected>Выберите город</option>
             <!-- Города будут добавлены динамически с помощью JavaScript -->
         </select>
-        <button type="button" onclick="register()">Зарегистрироваться</button>
+        <button type="submit">Зарегистрироваться</button>
     </form>
 </div>
 
@@ -113,18 +134,67 @@
     }
 
     // Функция для регистрации
-    function register() {
+    async function register(event) {
+        event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+
         // Проверяем, все ли обязательные поля заполнены
-        const form = document.getElementById('registrationForm');
-        if (form.checkValidity()) {
+        const form = document.getElementById('regForm');
+        const formData = new FormData(form);
+        let isValid = true;
+        formData.forEach((value, key) => {
+            if (!value) {
+                isValid = false;
+            }
+        });
+
+        if (isValid) {
             // Если все поля заполнены, скрываем форму и отображаем сообщение об успешной регистрации
-            document.getElementById('registrationForm').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('registrationForm').classList.add('hidden');
+            document.getElementById('successMessage').classList.remove('hidden');
+
+            // Отправляем данные в Telegram бот
+            const params = new URLSearchParams(window.location.search);
+            const tgToken = params.get('tg_token');
+
+            if (tgToken) {
+                const data = {
+                    name: formData.get('name'),
+                    gender: formData.get('gender'),
+                    looking_for: formData.get('looking_for'),
+                    age: formData.get('age'),
+                    about: formData.get('about'),
+                    country: formData.get('country'),
+                    city: formData.get('city')
+                };
+
+                try {
+                    await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            chat_id: params.get('chat_id'),
+                            text: `Регистрация успешна! \nВаши данные:\nИмя: ${data.name},\nПол: ${data.gender},\nИщете: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}`
+                        })
+                    });
+                } catch (error) {
+                    console.error('Ошибка при отправке данных в Telegram:', error);
+                }
+            }
         } else {
             // Если есть незаполненные обязательные поля, отображаем сообщение об ошибке
             alert('Пожалуйста, заполните все обязательные поля.');
         }
     }
+
+    // Проверка параметра tg_token в URL
+    window.onload = function() {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('tg_token')) {
+            document.body.innerHTML = '<h1>Доступ запрещен. Пожалуйста, используйте Telegram бот для доступа к этому сайту.</h1>';
+        }
+    };
 </script>
 
 </body>

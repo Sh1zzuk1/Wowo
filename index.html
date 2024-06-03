@@ -44,34 +44,39 @@
         .registration-form button:hover {
             background-color: #0056b3;
         }
+        .success-message {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-<div class="registration-form">
+<div class="registration-form" id="registrationForm">
     <h2>Регистрация</h2>
-    <form id="registrationForm">
+    <form>
         <input type="text" name="name" placeholder="Имя" required>
         <input type="number" name="age" placeholder="Возраст" required>
         <textarea name="about" placeholder="Расскажите о себе" rows="4" required></textarea>
-        <button type="submit">Зарегистрироваться</button>
+        <button type="button" onclick="register()">Зарегистрироваться</button>
     </form>
 </div>
 
+<div class="success-message" id="successMessage">
+    <p>Регистрация успешна!</p>
+</div>
+
 <script>
-    document.getElementById('registrationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = e.target;
-        const data = {
-            name: form.name.value,
-            age: form.age.value,
-            about: form.about.value
-        };
-        // Перенаправление на адрес, который является продолжением текущего URL
-        const currentUrl = window.location.href;
-        const nextUrl = currentUrl + "submit_registration";
-        window.location.href = nextUrl;
-    });
+    function register() {
+        // Скрываем форму
+        document.getElementById('registrationForm').style.display = 'none';
+        // Показываем сообщение об успешной регистрации
+        document.getElementById('successMessage').style.display = 'block';
+    }
 </script>
 
 </body>

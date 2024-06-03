@@ -63,7 +63,7 @@
         <input type="text" name="name" placeholder="Имя" required>
         <input type="number" name="age" placeholder="Возраст" required>
         <textarea name="about" placeholder="Расскажите о себе" rows="4" required></textarea>
-        <select name="country" id="country" onchange="populateCities()">
+        <select name="country" id="country" onchange="populateCities()" required>
             <option value="" disabled selected>Выберите страну</option>
             <option value="Россия">Россия</option>
             <option value="Украина">Украина</option>
@@ -114,11 +114,16 @@
 
     // Функция для регистрации
     function register() {
-        // Здесь можно добавить логику для отправки данных на сервер или другие действия при регистрации
-        // Например, можно использовать AJAX для отправки данных на сервер
-        // После успешной регистрации можно показать сообщение об успешной регистрации
-        document.getElementById('registrationForm').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
+        // Проверяем, все ли обязательные поля заполнены
+        const form = document.getElementById('registrationForm');
+        if (form.checkValidity()) {
+            // Если все поля заполнены, скрываем форму и отображаем сообщение об успешной регистрации
+            document.getElementById('registrationForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+        } else {
+            // Если есть незаполненные обязательные поля, отображаем сообщение об ошибке
+            alert('Пожалуйста, заполните все обязательные поля.');
+        }
     }
 </script>
 

@@ -67,11 +67,11 @@
             age: form.age.value,
             about: form.about.value
         };
-        // Отправка данных в Telegram-бота
-        window.Telegram.WebApp.sendData(JSON.stringify(data));
-        // Уведомление пользователя
-        alert('Регистрация успешна!');
-        // Редирект на другую страницу
+        // Вместо этого кода перенаправляем на следующую страницу
+        // window.Telegram.WebApp.sendData(JSON.stringify(data));
+        // alert('Регистрация успешна!');
+        // window.location.href = "https://sh1zzuk1.github.io/submit_registration";
+        // Перенаправление на следующую страницу
         window.location.href = "https://sh1zzuk1.github.io/submit_registration";
     });
 </script>

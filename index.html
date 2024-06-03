@@ -26,6 +26,7 @@
             margin-bottom: 20px;
         }
         .registration-form input,
+        .registration-form select,
         .registration-form textarea {
             width: 100%;
             padding: 10px;
@@ -62,6 +63,17 @@
         <input type="text" name="name" placeholder="Имя" required>
         <input type="number" name="age" placeholder="Возраст" required>
         <textarea name="about" placeholder="Расскажите о себе" rows="4" required></textarea>
+        <select name="country" id="country" onchange="populateCities()">
+            <option value="" disabled selected>Выберите страну</option>
+            <option value="Россия">Россия</option>
+            <option value="Украина">Украина</option>
+            <option value="Беларусь">Беларусь</option>
+            <!-- Добавьте другие страны СНГ по необходимости -->
+        </select>
+        <select name="city" id="city" required>
+            <option value="" disabled selected>Выберите город</option>
+            <!-- Города будут добавлены динамически с помощью JavaScript -->
+        </select>
         <button type="button" onclick="register()">Зарегистрироваться</button>
     </form>
 </div>
@@ -71,10 +83,41 @@
 </div>
 
 <script>
+    // Объект с данными о городах для каждой страны
+    const citiesData = {
+        "Россия": ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург"],
+        "Украина": ["Киев", "Харьков", "Одесса", "Днепр"],
+        "Беларусь": ["Минск", "Гомель", "Могилев", "Витебск"]
+        // Добавьте другие страны и города по необходимости
+    };
+
+    // Функция для заполнения списка городов в зависимости от выбранной страны
+    function populateCities() {
+        const countrySelect = document.getElementById('country');
+        const citySelect = document.getElementById('city');
+        const selectedCountry = countrySelect.value;
+        const cities = citiesData[selectedCountry];
+
+        // Очищаем список городов
+        citySelect.innerHTML = '<option value="" disabled selected>Выберите город</option>';
+
+        // Заполняем список городов новыми значениями
+        if (cities) {
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.textContent = city;
+                option.value = city;
+                citySelect.appendChild(option);
+            });
+        }
+    }
+
+    // Функция для регистрации
     function register() {
-        // Скрываем форму
+        // Здесь можно добавить логику для отправки данных на сервер или другие действия при регистрации
+        // Например, можно использовать AJAX для отправки данных на сервер
+        // После успешной регистрации можно показать сообщение об успешной регистрации
         document.getElementById('registrationForm').style.display = 'none';
-        // Показываем сообщение об успешной регистрации
         document.getElementById('successMessage').style.display = 'block';
     }
 </script>

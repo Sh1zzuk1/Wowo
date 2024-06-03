@@ -195,7 +195,14 @@
             document.body.innerHTML = '<h1>Доступ запрещен. Пожалуйста, используйте Telegram бот для доступа к этому сайту.</h1>';
         }
     };
-</script>
+// Проверка параметра tg_token в URL
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.get('tg_token')) {
+                document.body.innerHTML = '<h1>Доступ запрещен. Пожалуйста, используйте Telegram бот для доступа к этому сайту.</h1>';
+            }
+        };
+    </script>
 
 </body>
 </html>

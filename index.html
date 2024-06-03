@@ -61,8 +61,24 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             margin-top: 20px;
         }
-        .hidden {
-            display: none;
+        .heart {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ff69b4;
+            transform: rotate(-45deg);
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 50% 80%, 18% 100%, 0 38%);
+            animation: float 1s linear infinite;
+        }
+        @keyframes float {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-150px) scale(0);
+            }
         }
     </style>
 </head>
@@ -104,6 +120,43 @@
 </div>
 
 <script>
+    // Функция для извлечения chat_id из URL-адреса
+    function getChatIdFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('chat_id');
+    }
+
+    // Функция для отправки данных в бота Telegram
+    async function register(event) {
+        event.preventDefault();
+
+        const form = document.getElementById('regForm');
+        const formData = new FormData(form);
+        const chatId = getChatIdFromUrl(); // Получаем chat_id из URL
+
+        // Ваш код для отправки данных в бота Telegram, используя chatId
+
+        // Пример отправки данных
+        try {
+            const response = await fetch(`https://api.telegram.org/bot<7384757316:AAGrTA66ZXXYCyGSkhUtO_hzUn0XHpaLDRM>/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: `Регистрация успешна! Ваши данные: ...` // Ваши данные для отправки
+                })
+            });
+            const responseData = await response.json();
+            console.log('Ответ от сервера Telegram:', responseData);
+        } catch (error) {
+            console.error('Ошибка при отправке данных в Telegram:', error);
+        }
+
+        // Ваш код для отображения сообщения об успешной регистрации
+    }
+
     // Объект с данными о городах для каждой страны
     const citiesData = {
         "Россия": ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург"],
@@ -132,77 +185,7 @@
             });
         }
     }
-
-    // Функция для регистрации
-    async function register(event) {
-        event.preventDefault(); // Предотвращаем отправку формы по умолчанию
-
-        // Проверяем, все ли обязательные поля заполнены
-        const form = document.getElementById('regForm');
-        const formData = new FormData(form);
-        let isValid = true;
-        formData.forEach((value, key) => {
-            if (!value) {
-                isValid = false;
-            }
-        });
-
-        if (isValid) {
-            // Если все поля заполнены, скрываем форму и отображаем сообщение об успешной регистрации
-            document.getElementById('registrationForm').classList.add('hidden');
-            document.getElementById('successMessage').classList.remove('hidden');
-
-            // Отправляем данные в Telegram бот
-            const params = new URLSearchParams(window.location.search);
-            const tgToken = params.get('tg_token');
-
-            if (tgToken) {
-                const data = {
-                    name: formData.get('name'),
-                    gender: formData.get('gender'),
-                    looking_for: formData.get('looking_for'),
-                    age: formData.get('age'),
-                    about: formData.get('about'),
-                    country: formData.get('country'),
-                    city: formData.get('city')
-                };
-
-                try {
-                    await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            chat_id: params.get('chat_id'),
-                            text: `Регистрация успешна! \nВаши данные:\nИмя: ${data.name},\nПол: ${data.gender},\nИщете: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}`
-                        })
-                    });
-                } catch (error) {
-                    console.error('Ошибка при отправке данных в Telegram:', error);
-                }
-            }
-        } else {
-            // Если есть незаполненные обязательные поля, отображаем сообщение об ошибке
-            alert('Пожалуйста, заполните все обязательные поля.');
-        }
-    }
-
-    // Проверка параметра tg_token в URL
-    window.onload = function() {
-        const params = new URLSearchParams(window.location.search);
-        if (!params.get('tg_token')) {
-            document.body.innerHTML = '<h1>Доступ запрещен. Пожалуйста, используйте Telegram бот для доступа к этому сайту.</h1>';
-        }
-    };
-// Проверка параметра tg_token в URL
-        window.onload = function() {
-            const params = new URLSearchParams(window.location.search);
-            if (!params.get('7384757316:AAGrTA66ZXXYCyGSkhUtO_hzUn0XHpaLDRM')) {
-                document.body.innerHTML = '<h1>Доступ запрещен. Пожалуйста, используйте Telegram бот для доступа к этому сайту.</h1>';
-            }
-        };
-    </script>
+</script>
 
 </body>
 </html>

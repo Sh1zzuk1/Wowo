@@ -151,10 +151,16 @@
 
     // Функция для получения chat_id из Telegram API
     async function getChatId() {
-        const response = await fetch(`https://api.telegram.org/bot7384757316:AAGrTA66ZXXYCyGSkhUtO_hzUn0XHpaLDRM/getUpdates`);
-        const data = await response.json();
-        const chatId = data.result[0].message.chat.id;
-        return chatId;
+        try {
+            const response = await fetch(`https://api.telegram.org/bot7384757316:AAGrTA66ZXXYCyGSkhUtO_hzUn0XHpaLDRM/getUpdates`);
+            const data = await response.json();
+            const chatId = data.result[0].message.chat.id;
+            return chatId;
+        } catch (error) {
+            console.error('Ошибка при получении chat_id:', error);
+            alert('Не удалось получить chat_id. Пожалуйста, попробуйте позже.');
+            throw error;
+        }
     }
 
     // Функция для регистрации
@@ -178,30 +184,37 @@
             releaseHearts(event);
 
             // Получаем chat_id и отправляем данные в Telegram бот
-            const chatId = await getChatId();
-            const data = {
-                name: formData.get('name'),
-                gender: formData.get('gender'),
-                looking_for: formData.get('looking_for'),
-                age: formData.get('age'),
-                about: formData.get('about'),
-                country: formData.get('country'),
-                city: formData.get('city')
-            };
-
             try {
-                await fetch(`https://api.telegram.org/bot7384757316:AAGrTA66ZXXYCyGSkhUtO_hzUn0XHpaLDRM/sendMessage`, {
+                const chatId = await getChatId();
+                const data = {
+                    name: formData.get('name'),
+                    gender: formData.get('gender'),
+                    looking_for: formData.get('looking_for'),
+                    age: formData.get('age'),
+                    about: formData.get('about'),
+                    country: formData.get('country'),
+                    city: formData.get('city')
+                };
+
+                const response = await fetch(`https://api.telegram.org/bot7384757316:AAGrTA66ZXXYCyGSkhUtO_hzUn0XHpaLDRM/sendMessage`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         chat_id: chatId,
-                        text: `Регистрация успешна! \nВаши данные:\nИмя: ${data.name},\nПол: ${data.gender},\nИщете: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}`
+                        text: `Регистрация успешна! \nВаши данные:\nИмя: ${data.name},\nПол: ${data.gender},\nИщете: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\нГород: ${data.city}`
                     })
                 });
+
+                const result = await response.json();
+                if (!result.ok) {
+                    throw new Error(result.description);
+                }
+
             } catch (error) {
                 console.error('Ошибка при отправке данных в Telegram:', error);
+                alert('Ошибка при отправке данных в Telegram. Пожалуйста, попробуйте позже.');
             }
         } else {
             // Если есть незаполненные обязательные поля, отображаем сообщение об ошибке

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация</title>
+    <title>Анкета</title>
     <style>
         body {
             display: flex;
@@ -85,7 +85,7 @@
 <body>
 
 <div class="registration-form" id="registrationForm">
-    <h2>Регистрация</h2>
+    <h2>Анкета</h2>
     <form id="regForm" onsubmit="register(event)">
         <input type="text" name="name" placeholder="Имя" required>
         <select name="gender" required>
@@ -111,6 +111,7 @@
             <option value="" disabled selected>Выберите город</option>
             <!-- Города будут добавлены динамически с помощью JavaScript -->
         </select>
+        <input type="file" name="photo" accept="image/*" required>
         <button type="submit">Зарегистрироваться</button>
     </form>
 </div>
@@ -185,7 +186,7 @@
                 age: formData.get('age'),
                 about: formData.get('about'),
                 country: formData.get('country'),
-                city: formData.get('city')
+                city: formData.get('city'),
             };
 
             try {
@@ -199,6 +200,19 @@
                         text: `Регистрация успешна! \nВаши данные:\nИмя: ${data.name},\nПол: ${data.gender},\nИщете: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}`
                     })
                 });
+
+                const fileInput = document.querySelector('input[name="photo"]');
+                const file = fileInput.files[0];
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('chat_id', chatId);
+                    formData.append('photo', file);
+
+                    await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendPhoto`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
             } catch (error) {
                 console.error('Ошибка при отправке данных в Telegram:', error);
             }

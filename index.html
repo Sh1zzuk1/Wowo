@@ -3,6 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+     <!-- Start Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      // This script checks to see if a redirect is present in the query string,
+      // converts it back into the correct url and adds it to the
+      // browser's history using window.history.replaceState(...),
+      // which won't cause the browser to attempt to load the new url.
+      // When the single page app is loaded further down in this file,
+      // the correct url will be waiting in the browser's history for
+      // the single page app to route accordingly.
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <!-- End Single Page Apps for GitHub Pages -->
+
     <title>Анкета</title>
     <style>
         body {
@@ -51,6 +77,38 @@
         }
         .registration-form button:hover {
             background-color: #ff1493;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-input {
+            font-size: 14px;
+            color: #555;
+        }
+        .file-input-button {
+            background-color: #ff69b4;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            display: inline-block;
+            text-align: center;
+        }
+        .file-input-button:hover {
+            background-color: #ff1493;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
         }
         .success-message {
             display: none;
@@ -111,7 +169,10 @@
             <option value="" disabled selected>Выберите город</option>
             <!-- Города будут добавлены динамически с помощью JavaScript -->
         </select>
-        <input type="file" name="photo" accept="image/*" required>
+        <div class="file-input-wrapper">
+            <button class="file-input-button" type="button">Загрузите свое фото</button>
+            <input type="file" name="photo" class="file-input" accept="image/*" required>
+        </div>
         <button type="submit">Зарегистрироваться</button>
     </form>
 </div>
@@ -202,15 +263,16 @@
                 });
 
                 const fileInput = document.querySelector('input[name="photo"]');
-                const file = fileInput.files[0];
-                if (file) {
-                    const formData = new FormData();
-                    formData.append('chat_id', chatId);
-                    formData.append('photo', file);
+                const photoFile = fileInput.files[0];
+
+                if (photoFile) {
+                    const photoData = new FormData();
+                    photoData.append('chat_id', chatId);
+                    photoData.append('photo', photoFile);
 
                     await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendPhoto`, {
                         method: 'POST',
-                        body: formData
+                        body: photoData
                     });
                 }
             } catch (error) {

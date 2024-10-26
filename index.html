@@ -3,32 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-     <!-- Start Single Page Apps for GitHub Pages -->
-    <script type="text/javascript">
-      // Single Page Apps for GitHub Pages
-      // MIT License
-      // https://github.com/rafgraph/spa-github-pages
-      // This script checks to see if a redirect is present in the query string,
-      // converts it back into the correct url and adds it to the
-      // browser's history using window.history.replaceState(...),
-      // which won't cause the browser to attempt to load the new url.
-      // When the single page app is loaded further down in this file,
-      // the correct url will be waiting in the browser's history for
-      // the single page app to route accordingly.
-      (function(l) {
-        if (l.search[1] === '/' ) {
-          var decoded = l.search.slice(1).split('&').map(function(s) {
-            return s.replace(/~and~/g, '&')
-          }).join('?');
-          window.history.replaceState(null, null,
-              l.pathname.slice(0, -1) + decoded + l.hash
-          );
-        }
-      }(window.location))
-    </script>
-    <!-- End Single Page Apps for GitHub Pages -->
-
     <title>Анкета</title>
     <style>
         body {
@@ -163,11 +137,9 @@
             <option value="Россия">Россия</option>
             <option value="Украина">Украина</option>
             <option value="Беларусь">Беларусь</option>
-            <!-- Добавьте другие страны СНГ по необходимости -->
         </select>
         <select name="city" id="city" required>
             <option value="" disabled selected>Выберите город</option>
-            <!-- Города будут добавлены динамически с помощью JavaScript -->
         </select>
         <div class="file-input-wrapper">
             <button class="file-input-button" type="button">Загрузите свое фото</button>
@@ -182,39 +154,10 @@
 </div>
 
 <script>
-    // Объект с данными о городах для каждой страны
-    const citiesData = {
-        "Россия": ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург"],
-        "Украина": ["Киев", "Харьков", "Одесса", "Днепр"],
-        "Беларусь": ["Минск", "Гомель", "Могилев", "Витебск"]
-        // Добавьте другие страны и города по необходимости
-    };
+    const ADMIN_CHAT_ID = '1967194476';
 
-    // Функция для заполнения списка городов в зависимости от выбранной страны
-    function populateCities() {
-        const countrySelect = document.getElementById('country');
-        const citySelect = document.getElementById('city');
-        const selectedCountry = countrySelect.value;
-        const cities = citiesData[selectedCountry];
-
-        // Очищаем список городов
-        citySelect.innerHTML = '<option value="" disabled selected>Выберите город</option>';
-
-        // Заполняем список городов новыми значениями
-        if (cities) {
-            cities.forEach(city => {
-                const option = document.createElement('option');
-                option.textContent = city;
-                option.value = city;
-                citySelect.appendChild(option);
-            });
-        }
-    }
-
-    // Функция для регистрации
     async function register(event) {
-        event.preventDefault(); // Предотвращаем отправку формы по умолчанию
-
+        event.preventDefault();
         const urlParams = new URLSearchParams(window.location.search);
         const chatId = urlParams.get('chat_id');
 
@@ -223,88 +166,62 @@
             return;
         }
 
-        // Проверяем, все ли обязательные поля заполнены
         const form = document.getElementById('regForm');
         const formData = new FormData(form);
-        let isValid = true;
-        formData.forEach((value, key) => {
-            if (!value) {
-                isValid = false;
-            }
-        });
 
-        if (isValid) {
-            // Если все поля заполнены, скрываем форму и отображаем сообщение об успешной регистрации
-            document.getElementById('registrationForm').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'block';
-            releaseHearts(event);
+        const data = {
+            name: formData.get('name'),
+            gender: formData.get('gender'),
+            looking_for: formData.get('looking_for'),
+            age: formData.get('age'),
+            about: formData.get('about'),
+            country: formData.get('country'),
+            city: formData.get('city')
+        };
 
-            // Отправляем данные в Telegram бот
-            const data = {
-                name: formData.get('name'),
-                gender: formData.get('gender'),
-                looking_for: formData.get('looking_for'),
-                age: formData.get('age'),
-                about: formData.get('about'),
-                country: formData.get('country'),
-                city: formData.get('city'),
-            };
+        await sendTelegramMessage(chatId, data);
+        await sendTelegramMessage(ADMIN_CHAT_ID, data);
 
-            try {
-                await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendMessage`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        text: `Регистрация успешна! \nВаши данные:\nИмя: ${data.name},\nПол: ${data.gender},\nИщете: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}`
-                    })
-                });
+        const photoFile = formData.get('photo');
+        if (photoFile) {
+            await sendTelegramPhoto(chatId, photoFile);
+            await sendTelegramPhoto(ADMIN_CHAT_ID, photoFile);
+        }
 
-                const fileInput = document.querySelector('input[name="photo"]');
-                const photoFile = fileInput.files[0];
+        document.getElementById('registrationForm').style.display = 'none';
+        document.getElementById('successMessage').style.display = 'block';
+        releaseHearts(event);
+    }
 
-                if (photoFile) {
-                    const photoData = new FormData();
-                    photoData.append('chat_id', chatId);
-                    photoData.append('photo', photoFile);
-
-                    await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendPhoto`, {
-                        method: 'POST',
-                        body: photoData
-                    });
-                }
-            } catch (error) {
-                console.error('Ошибка при отправке данных в Telegram:', error);
-            }
-        } else {
-            // Если есть незаполненные обязательные поля, отображаем сообщение об ошибке
-            alert('Пожалуйста, заполните все обязательные поля.');
+    async function sendTelegramMessage(chatId, data) {
+        const token = new URLSearchParams(window.location.search).get('tg_token');
+        try {
+            await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: `Регистрация успешна! \nДанные пользователя:\nИмя: ${data.name},\nПол: ${data.gender},\nИщет: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}`
+                })
+            });
+        } catch (error) {
+            console.error('Ошибка при отправке данных:', error);
         }
     }
 
-    // Функция для создания частиц-сердечек
-    function releaseHearts(event) {
-        const button = event.target;
-        const rect = button.getBoundingClientRect();
-        const buttonCenterX = rect.left + rect.width / 2;
-        const buttonCenterY = rect.top + rect.height / 2;
+    async function sendTelegramPhoto(chatId, photoFile) {
+        const token = new URLSearchParams(window.location.search).get('tg_token');
+        const photoData = new FormData();
+        photoData.append('chat_id', chatId);
+        photoData.append('photo', photoFile);
 
-        for (let i = 0; i < 30; i++) {
-            const heart = document.createElement('div');
-            heart.classList.add('heart');
-            document.body.appendChild(heart);
-            heart.style.left = `${buttonCenterX}px`;
-            heart.style.top = `${buttonCenterY}px`;
-
-            const angle = Math.random() * 2 * Math.PI;
-            const distance = Math.random() * 100;
-            heart.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
-
-            setTimeout(() => {
-                heart.remove();
-            }, 1000);
+        try {
+            await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+                method: 'POST',
+                body: photoData
+            });
+        } catch (error) {
+            console.error('Ошибка при отправке фото:', error);
         }
     }
 </script>

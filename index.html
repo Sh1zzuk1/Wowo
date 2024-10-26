@@ -159,19 +159,34 @@
         }
     }
 
-    async function register(event) {
-        event.preventDefault();
+async function register(event) {
+    event.preventDefault(); // Предотвращаем отправку формы по умолчанию
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const chatId = urlParams.get('chat_id');
-        if (!chatId) {
-            alert('Не удалось получить chat_id. Пожалуйста, попробуйте позже.');
-            return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const chatId = urlParams.get('chat_id');
+
+    if (!chatId) {
+        alert('Не удалось получить chat_id. Пожалуйста, попробуйте позже.');
+        return;
+    }
+
+    // Проверяем, все ли обязательные поля заполнены
+    const form = document.getElementById('regForm');
+    const formData = new FormData(form);
+    let isValid = true;
+    formData.forEach((value) => {
+        if (!value) {
+            isValid = false;
         }
+    });
 
-        const form = document.getElementById('regForm');
-        const formData = new FormData(form);
+    if (isValid) {
+        // Если все поля заполнены, скрываем форму и отображаем сообщение об успешной регистрации
+        document.getElementById('registrationForm').style.display = 'none';
+        document.getElementById('successMessage').style.display = 'block';
+        releaseHearts(event);
 
+        // Отправляем данные в Telegram бот
         const data = {
             name: formData.get('name'),
             gender: formData.get('gender'),
@@ -179,37 +194,45 @@
             age: formData.get('age'),
             about: formData.get('about'),
             country: formData.get('country'),
-            city: formData.get('city')
+            city: formData.get('city'),
         };
 
-        await sendTelegramMessage(chatId, data);
-        await sendTelegramMessage('1967194476', data);
-
-        const photoFile = formData.get('photo');
-        if (photoFile) {
-            await sendTelegramPhoto(chatId, photoFile);
-            await sendTelegramPhoto('1967194476', photoFile);
-        }
-
-        document.getElementById('registrationForm').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
-    }
-
-    async function sendTelegramMessage(chatId, data) {
-        const token = new URLSearchParams(window.location.search).get('tg_token');
         try {
-            await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            // Отправляем текст анкеты и chatId
+            await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendMessage`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                     chat_id: chatId,
-                    text: `Регистрация успешна!\n\nИмя: ${data.name}\nПол: ${data.gender}\nИщет: ${data.looking_for}\nВозраст: ${data.age}\nО себе: ${data.about}\nСтрана: ${data.country}\nГород: ${data.city}`
+                    text: `Регистрация успешна! \nВаши данные:\nИмя: ${data.name},\nПол: ${data.gender},\nИщете: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}\nChat ID: ${chatId}`
                 })
             });
+
+            const fileInput = document.querySelector('input[name="photo"]');
+            const photoFile = fileInput.files[0];
+
+            if (photoFile) {
+                const photoData = new FormData();
+                photoData.append('chat_id', chatId);
+                photoData.append('photo', photoFile);
+
+                // Отправляем фото
+                await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendPhoto`, {
+                    method: 'POST',
+                    body: photoData
+                });
+            }
         } catch (error) {
-            console.error('Ошибка при отправке данных:', error);
+            console.error('Ошибка при отправке данных в Telegram:', error);
         }
+    } else {
+        // Если есть незаполненные обязательные поля, отображаем сообщение об ошибке
+        alert('Пожалуйста, заполните все обязательные поля.');
     }
+}
+
 
     async function sendTelegramPhoto(chatId, photoFile) {
         const token = new URLSearchParams(window.location.search).get('tg_token');

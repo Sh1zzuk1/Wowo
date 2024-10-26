@@ -114,9 +114,11 @@
             <option value="Россия">Россия</option>
             <option value="Украина">Украина</option>
             <option value="Беларусь">Беларусь</option>
+            <!-- Добавьте другие страны СНГ по необходимости -->
         </select>
         <select name="city" id="city" required>
             <option value="" disabled selected>Выберите город</option>
+            <!-- Города будут добавлены динамически с помощью JavaScript -->
         </select>
         <div class="file-input-wrapper">
             <button class="file-input-button" type="button">Загрузите свое фото</button>
@@ -126,19 +128,20 @@
     </form>
 </div>
 
-<div class="success-message" id="successMessage">
+<div class="success-message" id="successMessage" style="display: none;">
     <p>Регистрация успешна!</p>
 </div>
 
 <script>
-    // Данные для городов
+    // Объект с данными о городах для каждой страны
     const citiesData = {
         "Россия": ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург"],
         "Украина": ["Киев", "Харьков", "Одесса", "Днепр"],
         "Беларусь": ["Минск", "Гомель", "Могилев", "Витебск"]
+        // Добавьте другие страны и города по необходимости
     };
 
-    // Функция для заполнения городов
+    // Функция для заполнения списка городов в зависимости от выбранной страны
     function populateCities() {
         const countrySelect = document.getElementById('country');
         const citySelect = document.getElementById('city');
@@ -148,7 +151,7 @@
         // Очищаем список городов
         citySelect.innerHTML = '<option value="" disabled selected>Выберите город</option>';
 
-        // Заполняем список городов
+        // Заполняем список городов новыми значениями
         if (cities) {
             cities.forEach(city => {
                 const option = document.createElement('option');
@@ -159,97 +162,81 @@
         }
     }
 
-async function register(event) {
-    event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+    // Функция для регистрации
+    async function register(event) {
+        event.preventDefault(); // Предотвращаем отправку формы по умолчанию
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const chatId = urlParams.get('chat_id');
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatId = urlParams.get('chat_id');
 
-    if (!chatId) {
-        alert('Не удалось получить chat_id. Пожалуйста, попробуйте позже.');
-        return;
-    }
-
-    // Проверяем, все ли обязательные поля заполнены
-    const form = document.getElementById('regForm');
-    const formData = new FormData(form);
-    let isValid = true;
-    formData.forEach((value) => {
-        if (!value) {
-            isValid = false;
+        if (!chatId) {
+            alert('Не удалось получить chat_id. Пожалуйста, попробуйте позже.');
+            return;
         }
-    });
 
-    if (isValid) {
-        // Если все поля заполнены, скрываем форму и отображаем сообщение об успешной регистрации
-        document.getElementById('registrationForm').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
-        releaseHearts(event);
-
-        // Отправляем данные в Telegram бот
-        const data = {
-            name: formData.get('name'),
-            gender: formData.get('gender'),
-            looking_for: formData.get('looking_for'),
-            age: formData.get('age'),
-            about: formData.get('about'),
-            country: formData.get('country'),
-            city: formData.get('city'),
-        };
-
-        try {
-            // Отправляем текст анкеты и chatId
-            await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendMessage`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: `Регистрация успешна! \nВаши данные:\nИмя: ${data.name},\nПол: ${data.gender},\nИщете: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}\nChat ID: ${chatId}`
-                })
-            });
-
-            const fileInput = document.querySelector('input[name="photo"]');
-            const photoFile = fileInput.files[0];
-
-            if (photoFile) {
-                const photoData = new FormData();
-                photoData.append('chat_id', chatId);
-                photoData.append('photo', photoFile);
-
-                // Отправляем фото
-                await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendPhoto`, {
-                    method: 'POST',
-                    body: photoData
-                });
+        // Проверяем, все ли обязательные поля заполнены
+        const form = document.getElementById('regForm');
+        const formData = new FormData(form);
+        let isValid = true;
+        formData.forEach((value) => {
+            if (!value) {
+                isValid = false;
             }
-        } catch (error) {
-            console.error('Ошибка при отправке данных в Telegram:', error);
-        }
-    } else {
-        // Если есть незаполненные обязательные поля, отображаем сообщение об ошибке
-        alert('Пожалуйста, заполните все обязательные поля.');
-    }
-}
+        });
 
+        if (isValid) {
+            // Если все поля заполнены, скрываем форму и отображаем сообщение об успешной регистрации
+            document.getElementById('registrationForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
 
-    async function sendTelegramPhoto(chatId, photoFile) {
-        const token = new URLSearchParams(window.location.search).get('tg_token');
-        const photoData = new FormData();
-        photoData.append('chat_id', chatId);
-        photoData.append('photo', photoFile);
+            // Отправляем данные в Telegram бот
+            const data = {
+                name: formData.get('name'),
+                gender: formData.get('gender'),
+                looking_for: formData.get('looking_for'),
+                age: formData.get('age'),
+                about: formData.get('about'),
+                country: formData.get('country'),
+                city: formData.get('city'),
+            };
 
-        try {
-            await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
-                method: 'POST',
-                body: photoData
-            });
-        } catch (error) {
-            console.error('Ошибка при отправке фото:', error);
+            try {
+                // Отправляем текст анкеты и chatId
+                await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: `Регистрация успешна! \nВаши данные:\nИмя: ${data.name},\nПол: ${data.gender},\nИщете: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}\nChat ID: ${chatId}`
+                    })
+                });
+
+                const fileInput = document.querySelector('input[name="photo"]');
+                const photoFile = fileInput.files[0];
+
+                if (photoFile) {
+                    const photoData = new FormData();
+                    photoData.append('chat_id', chatId);
+                    photoData.append('photo', photoFile);
+
+                    // Отправляем фото
+                    await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendPhoto`, {
+                        method: 'POST',
+                        body: photoData
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка при отправке данных в Telegram:', error);
+            }
+        } else {
+            // Если есть незаполненные обязательные поля, отображаем сообщение об ошибке
+            alert('Пожалуйста, заполните все обязательные поля.');
         }
     }
 </script>
+
 
 </body>
 </html>

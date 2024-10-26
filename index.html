@@ -1,98 +1,3 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Анкета</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(to right, #6a11cb, #2575fc);
-            font-family: 'Arial', sans-serif;
-        }
-        .registration-form {
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            width: 350px;
-            text-align: center;
-        }
-        .registration-form h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .registration-form input,
-        .registration-form select,
-        .registration-form textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        .registration-form button {
-            padding: 12px 20px;
-            background-color: #ff69b4;
-            border: none;
-            border-radius: 6px;
-            color: #fff;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        .registration-form button:hover {
-            background-color: #ff1493;
-        }
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-        }
-        .file-input-button {
-            background-color: #ff69b4;
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            width: 100%;
-            display: inline-block;
-            text-align: center;
-        }
-        .file-input-button:hover {
-            background-color: #ff1493;
-        }
-        .file-input-wrapper input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-        }
-        .success-message {
-            display: none;
-            background-color: #d4edda;
-            color: #155724;
-            padding: 20px;
-            border-radius: 6px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-
 <div class="registration-form" id="registrationForm">
     <h2>Анкета</h2>
     <form id="regForm" onsubmit="register(event)">
@@ -168,6 +73,7 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const chatId = urlParams.get('chat_id');
+        const tgToken = urlParams.get('tg_token');
 
         if (!chatId) {
             alert('Не удалось получить chat_id. Пожалуйста, попробуйте позже.');
@@ -189,7 +95,6 @@
             document.getElementById('registrationForm').style.display = 'none';
             document.getElementById('successMessage').style.display = 'block';
 
-            // Отправляем данные в Telegram бот
             const data = {
                 name: formData.get('name'),
                 gender: formData.get('gender'),
@@ -202,7 +107,7 @@
 
             try {
                 // Отправляем текст анкеты и chatId
-                await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendMessage`, {
+                const textResponse = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -213,6 +118,11 @@
                     })
                 });
 
+                const textResult = await textResponse.json();
+                if (!textResult.ok) {
+                    throw new Error(`Ошибка при отправке текста: ${textResult.description}`);
+                }
+
                 const fileInput = document.querySelector('input[name="photo"]');
                 const photoFile = fileInput.files[0];
 
@@ -222,13 +132,22 @@
                     photoData.append('photo', photoFile);
 
                     // Отправляем фото
-                    await fetch(`https://api.telegram.org/bot${urlParams.get('tg_token')}/sendPhoto`, {
+                    const photoResponse = await fetch(`https://api.telegram.org/bot${tgToken}/sendPhoto`, {
                         method: 'POST',
                         body: photoData
                     });
+
+                    const photoResult = await photoResponse.json();
+                    if (!photoResult.ok) {
+                        throw new Error(`Ошибка при отправке фото: ${photoResult.description}`);
+                    }
                 }
+
+                alert('Регистрация и отправка данных прошли успешно!');
+
             } catch (error) {
                 console.error('Ошибка при отправке данных в Telegram:', error);
+                alert('Произошла ошибка при отправке данных. Пожалуйста, попробуйте еще раз.');
             }
         } else {
             // Если есть незаполненные обязательные поля, отображаем сообщение об ошибке
@@ -236,7 +155,3 @@
         }
     }
 </script>
-
-
-</body>
-</html>

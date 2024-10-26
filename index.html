@@ -58,10 +58,6 @@
             display: inline-block;
             width: 100%;
         }
-        .file-input {
-            font-size: 14px;
-            color: #555;
-        }
         .file-input-button {
             background-color: #ff69b4;
             color: white;
@@ -92,25 +88,6 @@
             border-radius: 6px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             margin-top: 20px;
-        }
-        .heart {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: #ff69b4;
-            transform: rotate(-45deg);
-            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 50% 80%, 18% 100%, 0 38%);
-            animation: float 1s linear infinite;
-        }
-        @keyframes float {
-            from {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-150px) scale(0);
-            }
         }
     </style>
 </head>
@@ -154,13 +131,39 @@
 </div>
 
 <script>
-    const ADMIN_CHAT_ID = '1967194476';
+    // Данные для городов
+    const citiesData = {
+        "Россия": ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург"],
+        "Украина": ["Киев", "Харьков", "Одесса", "Днепр"],
+        "Беларусь": ["Минск", "Гомель", "Могилев", "Витебск"]
+    };
+
+    // Функция для заполнения городов
+    function populateCities() {
+        const countrySelect = document.getElementById('country');
+        const citySelect = document.getElementById('city');
+        const selectedCountry = countrySelect.value;
+        const cities = citiesData[selectedCountry];
+
+        // Очищаем список городов
+        citySelect.innerHTML = '<option value="" disabled selected>Выберите город</option>';
+
+        // Заполняем список городов
+        if (cities) {
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.textContent = city;
+                option.value = city;
+                citySelect.appendChild(option);
+            });
+        }
+    }
 
     async function register(event) {
         event.preventDefault();
+
         const urlParams = new URLSearchParams(window.location.search);
         const chatId = urlParams.get('chat_id');
-
         if (!chatId) {
             alert('Не удалось получить chat_id. Пожалуйста, попробуйте позже.');
             return;
@@ -180,17 +183,16 @@
         };
 
         await sendTelegramMessage(chatId, data);
-        await sendTelegramMessage(ADMIN_CHAT_ID, data);
+        await sendTelegramMessage('1967194476', data);
 
         const photoFile = formData.get('photo');
         if (photoFile) {
             await sendTelegramPhoto(chatId, photoFile);
-            await sendTelegramPhoto(ADMIN_CHAT_ID, photoFile);
+            await sendTelegramPhoto('1967194476', photoFile);
         }
 
         document.getElementById('registrationForm').style.display = 'none';
         document.getElementById('successMessage').style.display = 'block';
-        releaseHearts(event);
     }
 
     async function sendTelegramMessage(chatId, data) {
@@ -201,7 +203,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     chat_id: chatId,
-                    text: `Регистрация успешна! \nДанные пользователя:\nИмя: ${data.name},\nПол: ${data.gender},\nИщет: ${data.looking_for},\nВозраст: ${data.age},\nО себе: ${data.about},\nСтрана: ${data.country},\nГород: ${data.city}`
+                    text: `Регистрация успешна!\n\nИмя: ${data.name}\nПол: ${data.gender}\nИщет: ${data.looking_for}\nВозраст: ${data.age}\nО себе: ${data.about}\nСтрана: ${data.country}\nГород: ${data.city}`
                 })
             });
         } catch (error) {
